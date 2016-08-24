@@ -36,6 +36,9 @@
     <ClInclude Include="CConnectedClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MessageT.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -54,6 +57,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CConnectedClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MessageT.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -96,7 +96,7 @@ void CClient::m_SenderMessages(void)
 
 		if (strcmp(_buffer, "/kill") == 0)
 		{
-			for (int i = 1; i < 1000; i++)
+			for (int i = 1; i < 100000; i++)
 			{
 				std::stringstream ss;
 				ss << i;

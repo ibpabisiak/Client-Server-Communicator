@@ -1,10 +1,14 @@
 #include "stdafx.h"
 #include "CConnectedClient.h"
 #include "ClientT.h"
+#include "MessageT.h"
 #include "CFunctions.h"
 
 
-std::vector<std::string> CConnectedClient::m_oMessagesBuffer;
+std::vector<MessageT> CConnectedClient::m_oMessagesBuffer;
+std::condition_variable CConnectedClient::m_oConnectedClientsCV;
+std::mutex CConnectedClient::m_oConnectedClientsMutex;
+bool CConnectedClient::m_bReady = true;
 
 CConnectedClient::CConnectedClient(SOCKET a_oClientSocket) :
 	m_oClientInfo(ClientT(a_oClientSocket)), m_bIsClientConnected(true) { }
@@ -27,11 +31,17 @@ bool CConnectedClient::isClientConnected(void)
 	return this->m_bIsClientConnected;
 }
 
-std::vector<std::string> CConnectedClient::getMessagesBuffer(void)
+std::vector<MessageT> CConnectedClient::getMessagesBuffer(void)
 {
-	std::vector<std::string> _oCopyOfBuffer = CConnectedClient::m_oMessagesBuffer;
+	std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oConnectedClientsMutex);
+	CConnectedClient::m_oConnectedClientsCV.wait(_oMutex, [] { return CConnectedClient::m_bReady; CConnectedClient::m_bReady = false; });
+
+	std::vector<MessageT> _oCopyOfBuffer = CConnectedClient::m_oMessagesBuffer;
 	m_oMessagesBuffer.clear();
 
+	CConnectedClient::m_bReady = true;
+	_oMutex.unlock();
+	CConnectedClient::m_oConnectedClientsCV.notify_all();
 
 	return _oCopyOfBuffer;
 }
@@ -76,36 +86,31 @@ void CConnectedClient::receiveMessageThread(void)
 				break;
 			}
 			
-			/*this->m_oMessagesBuffer.push_back(
-				CFunctions::formatClientMessage(
-					this->m_oClientInfo.getCliendID(),
-					this->m_oClientInfo.getClientNickname(),
-					_cMessageBuffer)
-			);*/
+			std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oConnectedClientsMutex);
+			CConnectedClient::m_oConnectedClientsCV.wait(_oMutex, [] { return CConnectedClient::m_bReady; CConnectedClient::m_bReady = false; });
 
-			//debug code to delete
-			CFunctions::printMessageToServerConsole(
-				CFunctions::formatClientMessage(
-					this->m_oClientInfo.getCliendID(),
-					this->m_oClientInfo.getClientNickname(),
-					_cMessageBuffer)
+			this->m_oMessagesBuffer.push_back(
+				MessageT(
+					this->getClientInfo().getCliendID(),
+					CFunctions::formatClientMessage(
+						this->m_oClientInfo.getCliendID(),
+						this->m_oClientInfo.getClientNickname(),
+						_cMessageBuffer)
+					)
 			);
+
+			////debug code to delete
+			//CFunctions::printMessageToServerConsole(
+			//	CFunctions::formatClientMessage(
+			//		this->m_oClientInfo.getCliendID(),
+			//		this->m_oClientInfo.getClientNickname(),
+			//		_cMessageBuffer)
+			//);
+
+			CConnectedClient::m_bReady = true;
+			_oMutex.unlock();
+			CConnectedClient::m_oConnectedClientsCV.notify_all();
+
 		}
-
-		//for debug, cout msgs in svr console
-		//std::cout << CFunctions::formatClientMsg(a_iClientID, _buffer) << std::endl;
-
-		//st¹d do bufora, a potem rozsy³anie tego w server.cpp i jesteœmy w domu :)
-		//kod poni¿ej to rozwi¹¿e
-
-		/*for each (auto _client in this->m_oConnectedClients)
-		{
-			if (_client.getCliendID() != a_iClientID)
-			{
-				char _cMsgToSend[MAX_BUFFER_SIZE];
-				strcpy(_cMsgToSend, CFunctions::formatClientMsg(a_iClientID, _buffer).c_str());
-				send(_client.getClientSocket(), _cMsgToSend, sizeof(_cMsgToSend), 0);
-			}
-		}*/
 	}
 }

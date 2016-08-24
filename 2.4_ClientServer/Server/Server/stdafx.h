@@ -22,6 +22,8 @@
 #include <vector>
 #include <regex>
 #include <sstream>
+#include <condition_variable>
+#include <mutex>
 
 //defines of the server configuration
 #define QUEUE_LISTEN_LIMIT	10

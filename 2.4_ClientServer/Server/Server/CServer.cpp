@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "CServer.h"
+#include "MessageT.h"
 
 /**
  * Public constructor
@@ -85,7 +86,7 @@ bool CServer::setListen(int a_iQueueLimit)
 void CServer::runWaiterThread(void)
 {
 	this->m_oWaiterThread = std::thread(&CServer::waitToConnectionThread, this);
-	//this->m_oMessagesBroadcaster = std::thread(&CServer::broadcastMessagesThread, this);
+	this->m_oMessagesBroadcaster = std::thread(&CServer::broadcastMessagesThread, this);
 }
 
 void CServer::waitToConnectionThread(void)
@@ -109,18 +110,24 @@ void CServer::broadcastMessagesThread(void)
 {
 	while (true)
 	{
-		Sleep(50);
-		std::vector<std::string> _oMessages = CConnectedClient::getMessagesBuffer();
+		std::vector<MessageT> _oMessages = CConnectedClient::getMessagesBuffer();
 		if (_oMessages.size() > 0)
 		{
 			for each (CConnectedClient * _oClient in this->m_oConnectedClients)
 			{
 				if (_oClient->isClientConnected())
 				{
-					for each (std::string _strMessage in _oMessages)
+					for each (MessageT _oMessage in _oMessages)
 					{
-						CFunctions::printMessageToServerConsole(_strMessage);
-						//send(_oClient->getClientInfo().getClientSocket(), _strMessage.c_str(), sizeof(_strMessage.c_str()), NULL);
+						if (_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID())
+						{
+							send(
+								_oClient->getClientInfo().getClientSocket(), 
+								_oMessage.getMessage().c_str(), 
+								sizeof(_oMessage.getMessage().c_str()),
+								NULL
+							);
+						}
 					}
 				}
 				else
