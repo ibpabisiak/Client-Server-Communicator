@@ -138,4 +138,3 @@ void CServer::broadcastMessagesThread(void)
 		}
 	}
 }
-
