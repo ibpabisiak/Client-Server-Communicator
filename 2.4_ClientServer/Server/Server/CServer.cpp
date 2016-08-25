@@ -36,6 +36,11 @@ CServer::~CServer(void)
 	{
 		this->m_oWaiterThread.join();
 	}
+
+	for each (CConnectedClient * _oClient in this->m_oConnectedClients)
+	{
+		delete(_oClient);
+	}
 }
 
 bool CServer::initializationWSAStartup(void)

@@ -67,12 +67,14 @@ void CConnectedClient::receiveMessageThread(void)
 		}
 		catch (...)
 		{
+			std::cout << "rozlaczyl sie chuj" << std::endl;
 			this->m_bIsClientConnected = false;
 			break;
 		}
 
 		if (0 == strcmp(_cNewMessageBuffer, "") || 0 == strcmp(_cNewMessageBuffer, "/q"))
 		{
+			std::cout << "rozlaczyl sie chuj" << std::endl;
 			this->m_bIsClientConnected = false;
 			break;
 		}
