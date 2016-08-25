@@ -9,6 +9,8 @@ public:
 	SOCKET getClientSocket(void);
 	std::string getClientNickname(void);
 	int getCliendID(void);
+	bool isClientLogged(void);
+	void setClientLogin(bool);
 	void setClientNickname(std::string);
 
 private:
@@ -17,5 +19,6 @@ private:
 	SOCKET m_oClientSocket;
 	std::string m_strClientNickname;
 	int m_iClientID;
+	bool m_bIsLogged;
 };
 

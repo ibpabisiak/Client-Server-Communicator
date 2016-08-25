@@ -29,4 +29,4 @@
 #define QUEUE_LISTEN_LIMIT	10
 #define MAX_BUFFER_SIZE		256
 #define MAX_CLIENTS			32
-#define WELCOME_MSG			"Connection successful, welcome!\nPlease, enter your nickname.."
+#define WELCOME_MSG			"> Connection successful, welcome!\n> Please, enter your nickname.."

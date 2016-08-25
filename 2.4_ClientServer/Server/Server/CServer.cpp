@@ -94,7 +94,7 @@ void CServer::waitToConnectionThread(void)
 	while(true)
 	{	
 		SOCKET _oAcceptedSocket = SOCKET_ERROR;
-		CFunctions::printMessageToServerConsole("Waiting for a client to connect..");
+		CFunctions::printMessageToServerConsole("> Waiting for a client to connect..");
 		_oAcceptedSocket = accept(this->m_oMainSocket, NULL, NULL);
 
 		if (SOCKET_ERROR != _oAcceptedSocket)
@@ -107,7 +107,7 @@ void CServer::waitToConnectionThread(void)
 
 			this->m_oConnectedClients.push_back(new CConnectedClient(_oAcceptedSocket));
 			this->m_oConnectedClients[this->m_oConnectedClients.size() - 1]->runReceiveMessageThread();
-			CFunctions::printMessageToServerConsole("New client conected..");
+			CFunctions::printMessageToServerConsole("> New client conected..");
 		}
 	}
 }
@@ -127,7 +127,7 @@ void CServer::broadcastMessagesThread(void)
 			{
 				for each (MessageT _oMessage in _oMessages)
 				{
-					if (_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID())
+					if ((_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID()) && _oClient->getClientInfo().isClientLogged())
 					{
 						send(
 							_oClient->getClientInfo().getClientSocket(), 

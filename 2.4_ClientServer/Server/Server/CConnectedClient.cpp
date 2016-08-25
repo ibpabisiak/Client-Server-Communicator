@@ -81,8 +81,14 @@ void CConnectedClient::receiveMessageThread(void)
 		if (!_bIsNicknameEntered)
 		{
 			this->m_oClientInfo.setClientNickname(_cNewMessageBuffer);
-			std::string _strAfterNicknameMessage = "Thanks! Your nickname is " + this->m_oClientInfo.getClientNickname();
-			send(this->m_oClientInfo.getClientSocket(), _strAfterNicknameMessage.c_str(), sizeof(_strAfterNicknameMessage), NULL);
+			this->m_oClientInfo.setClientLogin(true);
+			std::string _strAfterNicknameMessage = "> Thanks! Your nickname is " + this->m_oClientInfo.getClientNickname();
+			send(
+				this->m_oClientInfo.getClientSocket(), 
+				_strAfterNicknameMessage.c_str(), 
+				(sizeof(_strAfterNicknameMessage.c_str())/4) * _strAfterNicknameMessage.length(), 
+				NULL
+			);
 			_bIsNicknameEntered = true;
 		}
 		else
