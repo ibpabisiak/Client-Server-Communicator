@@ -6,9 +6,13 @@
 
 
 std::vector<MessageT> CConnectedClient::m_oMessagesBuffer;
+
 std::condition_variable CConnectedClient::m_oConnectedClientsCV;
 std::mutex CConnectedClient::m_oConnectedClientsMutex;
-bool CConnectedClient::m_bReady = true;
+bool CConnectedClient::m_bIsMessagesBufferAvailable = true;
+
+std::condition_variable CConnectedClient::m_oBroadcasterThreadConditionVariable;
+std::mutex CConnectedClient::m_oBroadcasterThreadMutex;
 
 CConnectedClient::CConnectedClient(SOCKET a_oClientSocket) :
 	m_oClientInfo(ClientT(a_oClientSocket)), m_bIsClientConnected(true) { }
@@ -34,12 +38,12 @@ bool CConnectedClient::isClientConnected(void)
 std::vector<MessageT> CConnectedClient::getMessagesBuffer(void)
 {
 	std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oConnectedClientsMutex);
-	CConnectedClient::m_oConnectedClientsCV.wait(_oMutex, [] { return CConnectedClient::m_bReady; CConnectedClient::m_bReady = false; });
+	CConnectedClient::m_oConnectedClientsCV.wait(_oMutex, [] { return CConnectedClient::m_bIsMessagesBufferAvailable; CConnectedClient::m_bIsMessagesBufferAvailable = false; });
 
 	std::vector<MessageT> _oCopyOfBuffer = CConnectedClient::m_oMessagesBuffer;
 	m_oMessagesBuffer.clear();
 
-	CConnectedClient::m_bReady = true;
+	CConnectedClient::m_bIsMessagesBufferAvailable = true;
 	_oMutex.unlock();
 	CConnectedClient::m_oConnectedClientsCV.notify_all();
 
@@ -48,69 +52,65 @@ std::vector<MessageT> CConnectedClient::getMessagesBuffer(void)
 
 void CConnectedClient::receiveMessageThread(void)
 {
-	bool _bIsEnteredName = false;
+	bool _bIsNicknameEntered = false;
 	while (true)
 	{
-		char _cMessageBuffer[MAX_BUFFER_SIZE];
+		char _cNewMessageBuffer[MAX_BUFFER_SIZE];
+		memset(&_cNewMessageBuffer, 0, sizeof(_cNewMessageBuffer));
 
-		memset(&_cMessageBuffer, 0, sizeof(_cMessageBuffer));
-
-		//rozlaczanie sie zrob
 		try
 		{
-			if (-1 == recv(this->m_oClientInfo.getClientSocket(), _cMessageBuffer, sizeof(_cMessageBuffer), 0))
+			if (-1 == recv(this->m_oClientInfo.getClientSocket(), _cNewMessageBuffer, sizeof(_cNewMessageBuffer), 0))
 			{
 				throw std::exception();
 			}
-
 		}
 		catch (...)
 		{
-			std::cout << "rozlaczyl sie glab jebany" << std::endl;
 			this->m_bIsClientConnected = false;
 			break;
 		}
 
-		if (!_bIsEnteredName)
+		if (0 == strcmp(_cNewMessageBuffer, "") || 0 == strcmp(_cNewMessageBuffer, "/q"))
 		{
-			this->m_oClientInfo.setClientNickname(_cMessageBuffer);
-			std::string _strAfterNicknameMessage = "Thanks! Your nickname is " + this->m_oClientInfo.getClientNickname();
-			send(this->m_oClientInfo.getClientSocket(), _strAfterNicknameMessage.c_str(), sizeof(_strAfterNicknameMessage), NULL);
-			_bIsEnteredName = true;
+			this->m_bIsClientConnected = false;
+			break;
+		}
+
+		if (!_bIsNicknameEntered)
+		{
+			this->m_oClientInfo.setClientNickname(_cNewMessageBuffer);
+			this->m_oClientInfo.setClientLogin(true);
+			std::string _strAfterNicknameMessage = "> Thanks! Your nickname is " + this->m_oClientInfo.getClientNickname();
+			send(
+				this->m_oClientInfo.getClientSocket(), 
+				_strAfterNicknameMessage.c_str(), 
+				(sizeof(_strAfterNicknameMessage.c_str())/4) * _strAfterNicknameMessage.length(), 
+				NULL
+			);
+			_bIsNicknameEntered = true;
 		}
 		else
 		{
-			if (0 == strcmp(_cMessageBuffer, "") || 0 == strcmp(_cMessageBuffer, "/q"))
-			{
-				this->m_bIsClientConnected = false;
-				break;
-			}
-			
-			std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oConnectedClientsMutex);
-			CConnectedClient::m_oConnectedClientsCV.wait(_oMutex, [] { return CConnectedClient::m_bReady; CConnectedClient::m_bReady = false; });
+			std::unique_lock<std::mutex> _oReceiverLockMutex(CConnectedClient::m_oConnectedClientsMutex);
+			CConnectedClient::m_oConnectedClientsCV.wait(_oReceiverLockMutex, [] { return CConnectedClient::m_bIsMessagesBufferAvailable; CConnectedClient::m_bIsMessagesBufferAvailable = false; });
 
 			this->m_oMessagesBuffer.push_back(
 				MessageT(
 					this->getClientInfo().getCliendID(),
-					CFunctions::formatClientMessage(
-						this->m_oClientInfo.getCliendID(),
-						this->m_oClientInfo.getClientNickname(),
-						_cMessageBuffer)
-					)
+					this->getClientInfo().getClientNickname(),
+					_cNewMessageBuffer
+				)
 			);
 
-			////debug code to delete
-			//CFunctions::printMessageToServerConsole(
-			//	CFunctions::formatClientMessage(
-			//		this->m_oClientInfo.getCliendID(),
-			//		this->m_oClientInfo.getClientNickname(),
-			//		_cMessageBuffer)
-			//);
-
-			CConnectedClient::m_bReady = true;
-			_oMutex.unlock();
+			CConnectedClient::m_bIsMessagesBufferAvailable = true;
+			
+			_oReceiverLockMutex.unlock();
 			CConnectedClient::m_oConnectedClientsCV.notify_all();
 
+			std::unique_lock<std::mutex> _oBroadcasterLockMutex(CConnectedClient::m_oBroadcasterThreadMutex);
+			_oBroadcasterLockMutex.unlock();
+			CConnectedClient::m_oBroadcasterThreadConditionVariable.notify_one();
 		}
 	}
 }

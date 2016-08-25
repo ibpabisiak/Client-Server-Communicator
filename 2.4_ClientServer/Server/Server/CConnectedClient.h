@@ -6,27 +6,31 @@
 
 class CConnectedClient
 {
-public:
-	CConnectedClient(SOCKET);
-	~CConnectedClient();
+	public:
+		static std::condition_variable m_oBroadcasterThreadConditionVariable;
+		static std::mutex m_oBroadcasterThreadMutex;
 
-	ClientT getClientInfo(void);
-	void runReceiveMessageThread(void);
-	bool isClientConnected(void);
-	static std::vector<MessageT> getMessagesBuffer(void);
+		CConnectedClient(SOCKET);
+		~CConnectedClient();
 
-private:
-	//static fields
-	static std::vector<MessageT> m_oMessagesBuffer;
-	static std::condition_variable m_oConnectedClientsCV;
-	static std::mutex m_oConnectedClientsMutex;
-	static bool m_bReady;
+		ClientT getClientInfo(void);
+		void runReceiveMessageThread(void);
+		bool isClientConnected(void);
+		static std::vector<MessageT> getMessagesBuffer(void);
 
-	//fields
-	ClientT m_oClientInfo;
-	std::thread m_oClientThread;
-	bool m_bIsClientConnected;
+	private:
+		//static fields
+		static std::vector<MessageT> m_oMessagesBuffer;
 
-	//methods
-	void receiveMessageThread(void);
+		static std::condition_variable m_oConnectedClientsCV;
+		static std::mutex m_oConnectedClientsMutex;
+		static bool m_bIsMessagesBufferAvailable;
+
+		//fields
+		ClientT m_oClientInfo;
+		std::thread m_oClientThread;
+		bool m_bIsClientConnected;
+
+		//methods
+		void receiveMessageThread(void);
 };

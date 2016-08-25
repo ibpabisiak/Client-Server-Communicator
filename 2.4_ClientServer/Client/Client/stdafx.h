@@ -23,4 +23,4 @@
 
 #define	PORT			1234 //port do polaczenia sie
 #define BACKLOG			10 // max polaczen w kolejce w lsiten()
-#define MAX_BUFFER_SIZE	128
+#define MAX_BUFFER_SIZE	256

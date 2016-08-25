@@ -32,7 +32,10 @@ CServer::CServer(std::string a_strIPAdrress, int a_iPort)
 
 CServer::~CServer(void) 
 { 
-	this->m_oWaiterThread.join();
+	if (this->m_oWaiterThread.joinable())
+	{
+		this->m_oWaiterThread.join();
+	}
 }
 
 bool CServer::initializationWSAStartup(void)
@@ -94,14 +97,20 @@ void CServer::waitToConnectionThread(void)
 	while(true)
 	{	
 		SOCKET _oAcceptedSocket = SOCKET_ERROR;
-		CFunctions::printMessageToServerConsole("Waiting for a client to connect..");
+		CFunctions::printMessageToServerConsole("> Waiting for a client to connect..");
 		_oAcceptedSocket = accept(this->m_oMainSocket, NULL, NULL);
 
 		if (SOCKET_ERROR != _oAcceptedSocket)
 		{
+			if (this->m_bNewClientConnected)
+			{
+				std::unique_lock<std::mutex> _oNewClientConnectedLock(this->m_oNewClientConnectedMutex);
+				this->m_oNewClientConnectedCV.wait(_oNewClientConnectedLock);
+			}
+
 			this->m_oConnectedClients.push_back(new CConnectedClient(_oAcceptedSocket));
 			this->m_oConnectedClients[this->m_oConnectedClients.size() - 1]->runReceiveMessageThread();
-			CFunctions::printMessageToServerConsole("Client conected..");
+			CFunctions::printMessageToServerConsole("> New client conected..");
 		}
 	}
 }
@@ -110,32 +119,39 @@ void CServer::broadcastMessagesThread(void)
 {
 	while (true)
 	{
+		std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oBroadcasterThreadMutex);
+		CConnectedClient::m_oBroadcasterThreadConditionVariable.wait(_oMutex);
+		this->m_bNewClientConnected = true;
+
 		std::vector<MessageT> _oMessages = CConnectedClient::getMessagesBuffer();
-		if (_oMessages.size() > 0)
+		for each (CConnectedClient * _oClient in this->m_oConnectedClients)
 		{
-			for each (CConnectedClient * _oClient in this->m_oConnectedClients)
+			if (_oClient->isClientConnected())
 			{
-				if (_oClient->isClientConnected())
+				for each (MessageT _oMessage in _oMessages)
 				{
-					for each (MessageT _oMessage in _oMessages)
+					if ((_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID()) && _oClient->getClientInfo().isClientLogged())
 					{
-						if (_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID())
-						{
-							send(
-								_oClient->getClientInfo().getClientSocket(), 
-								_oMessage.getMessage().c_str(), 
-								sizeof(_oMessage.getMessage().c_str()),
-								NULL
-							);
-						}
+						send(
+							_oClient->getClientInfo().getClientSocket(), 
+							_oMessage.getFormattedMessage().c_str(),
+							(sizeof(_oMessage.getFormattedMessage().c_str()) / 4) * _oMessage.getFormattedMessage().length(),
+							NULL
+						);
 					}
-				}
-				else
-				{
-					//here delete disconnected client
+					////debug code to delete
+					//CFunctions::printMessageToServerConsole(_oMessage.getFormattedMessage());
 				}
 			}
+			else
+			{
+				//here delete disconnected client
+			}
 		}
+
+		this->m_bNewClientConnected = false;
+		std::unique_lock<std::mutex> _oNewClientConnectedLock(this->m_oNewClientConnectedMutex);
+		_oNewClientConnectedLock.unlock();
+		this->m_oNewClientConnectedCV.notify_all();
 	}
 }
-

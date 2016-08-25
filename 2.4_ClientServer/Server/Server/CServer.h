@@ -15,7 +15,10 @@ class CServer
 		SOCKET m_oMainSocket;
 		std::thread m_oWaiterThread;
 		std::thread m_oMessagesBroadcaster;
+		std::condition_variable m_oNewClientConnectedCV;
+		std::mutex m_oNewClientConnectedMutex;
 		std::vector<CConnectedClient *> m_oConnectedClients;
+		bool m_bNewClientConnected;
 
 		bool initializationWSAStartup(void);
 		bool setMainSocket(int, int, int);
