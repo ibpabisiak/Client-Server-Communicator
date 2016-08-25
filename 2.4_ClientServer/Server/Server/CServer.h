@@ -18,7 +18,7 @@ class CServer
 		std::condition_variable m_oNewClientConnectedCV;
 		std::mutex m_oNewClientConnectedMutex;
 		std::vector<CConnectedClient *> m_oConnectedClients;
-		bool m_bIsNewClientConnected;
+		bool m_bNewClientConnected;
 
 		bool initializationWSAStartup(void);
 		bool setMainSocket(int, int, int);

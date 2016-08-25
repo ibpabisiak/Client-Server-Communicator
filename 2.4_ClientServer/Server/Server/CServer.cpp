@@ -32,7 +32,10 @@ CServer::CServer(std::string a_strIPAdrress, int a_iPort)
 
 CServer::~CServer(void) 
 { 
-	this->m_oWaiterThread.join();
+	if (this->m_oWaiterThread.joinable())
+	{
+		this->m_oWaiterThread.join();
+	}
 }
 
 bool CServer::initializationWSAStartup(void)
@@ -99,7 +102,7 @@ void CServer::waitToConnectionThread(void)
 
 		if (SOCKET_ERROR != _oAcceptedSocket)
 		{
-			if (this->m_bIsNewClientConnected)
+			if (this->m_bNewClientConnected)
 			{
 				std::unique_lock<std::mutex> _oNewClientConnectedLock(this->m_oNewClientConnectedMutex);
 				this->m_oNewClientConnectedCV.wait(_oNewClientConnectedLock);
@@ -118,7 +121,7 @@ void CServer::broadcastMessagesThread(void)
 	{
 		std::unique_lock<std::mutex> _oMutex(CConnectedClient::m_oBroadcasterThreadMutex);
 		CConnectedClient::m_oBroadcasterThreadConditionVariable.wait(_oMutex);
-		this->m_bIsNewClientConnected = true;
+		this->m_bNewClientConnected = true;
 
 		std::vector<MessageT> _oMessages = CConnectedClient::getMessagesBuffer();
 		for each (CConnectedClient * _oClient in this->m_oConnectedClients)
@@ -146,7 +149,7 @@ void CServer::broadcastMessagesThread(void)
 			}
 		}
 
-		this->m_bIsNewClientConnected = false;
+		this->m_bNewClientConnected = false;
 		std::unique_lock<std::mutex> _oNewClientConnectedLock(this->m_oNewClientConnectedMutex);
 		_oNewClientConnectedLock.unlock();
 		this->m_oNewClientConnectedCV.notify_all();

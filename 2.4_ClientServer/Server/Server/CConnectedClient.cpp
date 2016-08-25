@@ -13,7 +13,6 @@ bool CConnectedClient::m_bIsMessagesBufferAvailable = true;
 
 std::condition_variable CConnectedClient::m_oBroadcasterThreadConditionVariable;
 std::mutex CConnectedClient::m_oBroadcasterThreadMutex;
-bool CConnectedClient::m_bIsNewMessages = false;
 
 CConnectedClient::CConnectedClient(SOCKET a_oClientSocket) :
 	m_oClientInfo(ClientT(a_oClientSocket)), m_bIsClientConnected(true) { }
