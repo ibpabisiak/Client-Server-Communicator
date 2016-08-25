@@ -129,17 +129,15 @@ void CServer::broadcastMessagesThread(void)
 				{
 					if (_oMessage.getSenderID() != _oClient->getClientInfo().getCliendID())
 					{
-						//send(
-						//	_oClient->getClientInfo().getClientSocket(), 
-						//	_oMessage.getFormattedMessage().c_str(), 
-						//	sizeof(_oMessage.getFormattedMessage().c_str()),
-						//	NULL
-						//);
+						send(
+							_oClient->getClientInfo().getClientSocket(), 
+							_oMessage.getFormattedMessage().c_str(),
+							(sizeof(_oMessage.getFormattedMessage().c_str()) / 4) * _oMessage.getFormattedMessage().length(),
+							NULL
+						);
 					}
-
 					////debug code to delete
 					//CFunctions::printMessageToServerConsole(_oMessage.getFormattedMessage());
-					std::string t = _oMessage.getFormattedMessage();
 				}
 			}
 			else

@@ -98,14 +98,6 @@ void CConnectedClient::receiveMessageThread(void)
 				)
 			);
 
-			////debug code to delete
-			//CFunctions::printMessageToServerConsole(
-			//	CFunctions::formatClientMessage(
-			//		this->m_oClientInfo.getCliendID(),
-			//		this->m_oClientInfo.getClientNickname(),
-			//		_cMessageBuffer)
-			//);
-
 			CConnectedClient::m_bIsMessagesBufferAvailable = true;
 			
 			_oReceiverLockMutex.unlock();

@@ -49,8 +49,6 @@ std::string MessageT::formatClientMessage(int a_iClientID, std::string a_strClie
 	if (a_strMessage.length() > (MAX_BUFFER_SIZE - _ssClientPrefix.str().length()))
 	{
 		_strOutputMessage = "* Message is too long!";
-		std::cout << _strOutputMessage << std::endl;
-		std::cout << a_strMessage << std::endl;
 	}
 	else
 	{

@@ -115,7 +115,7 @@ void CClient::m_ReceiverMessagesThread(void)
 	char _buffer[MAX_BUFFER_SIZE];
 	while (true)
 	{
-		memset(&_buffer, 0, sizeof(_buffer));
+		memset(&_buffer, 0, MAX_BUFFER_SIZE);
 		try
 		{
 			if (-1 == recv(this->m_oMainSocket, _buffer, sizeof(_buffer), 0))
