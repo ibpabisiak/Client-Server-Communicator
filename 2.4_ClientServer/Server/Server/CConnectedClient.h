@@ -7,6 +7,10 @@
 class CConnectedClient
 {
 public:
+	static std::condition_variable m_oBroadcasterThreadConditionVariable;
+	static std::mutex m_oBroadcasterThreadMutex;
+	static bool m_bIsNewMessages;
+
 	CConnectedClient(SOCKET);
 	~CConnectedClient();
 
@@ -18,9 +22,10 @@ public:
 private:
 	//static fields
 	static std::vector<MessageT> m_oMessagesBuffer;
+
 	static std::condition_variable m_oConnectedClientsCV;
 	static std::mutex m_oConnectedClientsMutex;
-	static bool m_bReady;
+	static bool m_bIsMessagesBufferAvailable;
 
 	//fields
 	ClientT m_oClientInfo;

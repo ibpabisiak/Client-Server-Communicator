@@ -18,26 +18,26 @@ void CFunctions::printMessageToServerConsole(std::string a_strMessage)
  * @param string a_strMessage - message from client
  * @return - formatted message to send
  */
-std::string CFunctions::formatClientMessage(int a_iClientID, std::string a_strClientNickname, std::string a_strMessage)
-{
-	std::string _strOutputMessage;
-	std::stringstream _ssClientPrefix;
-
-	_ssClientPrefix << "> " << a_strClientNickname << "[ID: " << a_iClientID << "]: ";
-
-	if (a_strMessage.length() > (MAX_BUFFER_SIZE - _ssClientPrefix.str().length()))
-	{
-		_strOutputMessage = "* Message is too long!";
-	}
-	else 
-	{
-		char _cMessageBuffer[MAX_BUFFER_SIZE];
-		sprintf(_cMessageBuffer, "%s%s", _ssClientPrefix.str().c_str(), a_strMessage.c_str());
-		_strOutputMessage = _cMessageBuffer;
-	}
-
-	return _strOutputMessage;
-}
+//std::string CFunctions::formatClientMessage(int a_iClientID, std::string a_strClientNickname, std::string a_strMessage)
+//{
+//	std::string _strOutputMessage;
+//	std::stringstream _ssClientPrefix;
+//
+//	_ssClientPrefix << "> " << a_strClientNickname << "[ID: " << a_iClientID << "]: ";
+//
+//	if (a_strMessage.length() > (MAX_BUFFER_SIZE - _ssClientPrefix.str().length()))
+//	{
+//		_strOutputMessage = "* Message is too long!";
+//	}
+//	else 
+//	{
+//		char _cMessageBuffer[MAX_BUFFER_SIZE];
+//		sprintf(_cMessageBuffer, "%s%s", _ssClientPrefix.str().c_str(), a_strMessage.c_str());
+//		_strOutputMessage = _cMessageBuffer;
+//	}
+//
+//	return _strOutputMessage;
+//}
 
 
 /**
