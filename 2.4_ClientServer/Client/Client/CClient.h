@@ -11,10 +11,9 @@ private:
 	WSADATA m_oWsaData;
 	std::thread m_oReceiveThread;
 
-	bool m_InitializationWSAStartup(void);
-	bool m_SetMainSocket(void);
-	bool m_Connect(void);
-	void m_SenderMessages(void);
+	bool m_initializationWSAStartup(void);
+	bool m_setMainSocket(void);
+	bool m_connectToServer(void);
+	void m_messagesBroadcaster(void);
 	void m_ReceiverMessagesThread(void);
-
 };

@@ -20,6 +20,7 @@
 #include <condition_variable>
 #include <vector>
 #include <sstream>
+#include <regex>
 
 #define	PORT			1234 //port do polaczenia sie
 #define BACKLOG			10 // max polaczen w kolejce w lsiten()
